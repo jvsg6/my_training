@@ -1,0 +1,129 @@
+Ничего сложного, но существенно может существенно упростить жизнь.
+
+Что бы создать новую ветку локально следует добавить параметр -b к команде checkout.
+
+git checkout -b <name_of_branch>
+Git создаст и сразу переключит на новую ветку. Сервер про нашу локалькую ветку пока что ничего не знает.
+
+Мы можем это исправить, сделав указав удаленную ветку по умолчанию для push и pull. Нужно выполнить команду git push --set-upstream <name_of_server> <name_of_branch>. На сервере создастся новая ветка. После этого при выполнении команди git push и git pull не требуется указывать повторно эти данные, они установлены по умолчанию для данной ветки.
+
+Для примера создадим локально и удаленно ветку BRANCH-414:
+
+> git checkout -b BRANCH-414
+Switched to a new branch 'BRANCH-414'
+> git status
+On branch BRANCH-414
+
+> git push
+fatal: The current branch test_branch has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin BRANCH-414
+> git push --set-upstream origin BRANCH-414
+Total 0 (delta 0), reused 0 (delta 0)
+To *server_address*
+ * [new branch]      BRANCH-414 -> BRANCH-414
+Branch BRANCH-414 set up to track remote branch test_branch from origin.
+> git status
+On branch test_BRANCH-414
+Your branch is up-to-date with 'origin/BRANCH-414'.
+
+Как видно, git нам дает полезные подсказки, по-этому даже не нужно запоминать команду --set-upstream, она и так всегда будет перед глазами.
+
+
+
+
+
+
+Как клонировать удаленный репозиторий и получить иную ветку, чем master (т.е. по умолчанию)?
+git clone http://whatever.git -b branch-name
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Начальная настройка
+git config --global user.email your.name@domain
+git config --global user.name "Your Name"
+git config --global push.default current
+git clone <url репозитория>
+Работа с ветками
+создание ветки
+git branch <имя ветки>
+переключение
+git checkout <имя ветки>
+две операции вместе
+git checkout -b <имя ветки>
+посмотреть ветки в своем репозитории
+git branch
+посмотреть ветки на удаленном репозитории
+git branch -r
+создание удаленной ветки (соответствующей текущей ветке)
+git push -u origin <имя ветки на удаленном репозитории, обычно такое же, как и локальное>
+удаление локальной ветки
+git branch -d <имя ветки>. Но в этом случае git иногда ноет, что у вас ветка не слита с HEADом или upstream-branch.
+git branch -D <имя ветки>. Так он удалит в любом случае, вне зависимости от merged status ветки, которую вы хотите удалить.
+cинхронизация с ветками
+--взятие, без флага rebase будет выполняться merge, а с этим флагом будет выполняться rebase
+git pull --rebase
+git pull без --rebase использовать ЗАПРЕЩЕНО! - это создаст проблемы при последующих rebase и слиянии веток.
+Также рекомендуется один раз запустить
+git config branch.autosetuprebase always
+Это позволит автоматически во время git pull добавлять флаг --rebase
+--отправка на сервер. после первого push'a с флагом -u достаточно писать лишь git push
+Пример: Cлияние ветки с master через rebase с обновлением ветки master
+- обновляем master
+git checkout master
+git pull --rebase
+
+- ребейзим ветки на master
+git checkout <имя ветки>
+git rebase master
+
+master при этом не меняется, то есть если вы хотите просто влить в Вашу ветку общие изменения, на этом надо остановиться.
+Только не забудьте перед следующим git pull --rebase(в своей ветке) сделать git push --force origin <имя ветки>, поскольку из-за ребейза <имя ветки> и origin/<имя ветки> разошлись. Иначе, если сделать pull --rebase то вы снова примените к своей ветке свои коммиты.
+возвращаемся обратно, делаем fast-forward merge и выливаем в репозиторий
+git checkout master
+git merge <имя бранча> (должно быть написано fast-forward)
+git push
+
+Исправления
+конфликтов
+в любимом редакторе
+git mergetool [--tool=<tool>]
+сторонние gui git приложения (Валера пользуется smartgit)
+исправление коммитов
+отлично работающая штука, если вы сделали какую-то глупость (например, смерджились случайно c master):
+git reflog 
+Там будет список Ваших последних действий. К любому из них можно откатиться вполне стандартным способом:
+git reset --hard HEAD@{n}
+слияние коммитов
+git rebase -i <start_point> (внимание, ребейз начинается после start point'a)
+исправление предыдущего коммита
+git commit --amend
+откат коммита
+git reset HEAD~<n> (сами файлы в working tree останутся)
+git reset --hard HEAD~<n> (working tree файлы не останутся)
+откат из индекса
+git reset <file name>
+откат измененного файла
+git checkout HEAD <file name>
+взятие отдельного коммита в свой бранч
+git cherry-pick <commit>
+взятие несколько подряд идущих коммитов
+git cherry-pick <commit_from>..<commmit_to>
+Удаление ветки на удаленном репозитории
+git push origin :<имя ветки на удаленном репозитории>
